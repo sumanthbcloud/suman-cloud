@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
@@ -130,6 +131,64 @@ class FileServiceTest {
         var response = fileService.getPresignedUrl(1L, 5L);
 
         assertThat(response.get("url")).contains("test-bucket");
+    }
+
+    @Test
+    @DisplayName("Should generate download URL with attachment Content-Disposition and 1-hour expiry")
+    void shouldGenerateDownloadUrlWithAttachmentContentDisposition() throws Exception {
+        FileRecord record = new FileRecord(1L, "report-2026.pdf", "DOCUMENT", "application/pdf", 2048L, "users/1/report-2026.pdf");
+        record.setId(12L);
+
+        when(fileRecordRepository.findByIdAndUserId(12L, 1L)).thenReturn(Optional.of(record));
+
+        PresignedGetObjectRequest presignedRequest = mock(PresignedGetObjectRequest.class);
+        when(presignedRequest.url()).thenReturn(new URI("https://test-bucket.s3.us-east-1.amazonaws.com/users/1/report-2026.pdf?response-content-disposition=attachment").toURL());
+        when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presignedRequest);
+
+        var response = fileService.getDownloadUrl(1L, 12L);
+
+        assertThat(response.get("url")).contains("test-bucket");
+
+        ArgumentCaptor<GetObjectPresignRequest> captor = ArgumentCaptor.forClass(GetObjectPresignRequest.class);
+        verify(s3Presigner).presignGetObject(captor.capture());
+        GetObjectPresignRequest presignRequestValue = captor.getValue();
+
+        assertThat(presignRequestValue.signatureDuration()).isEqualTo(java.time.Duration.ofHours(1));
+        assertThat(presignRequestValue.getObjectRequest().responseContentDisposition())
+                .isEqualTo("attachment; filename=\"report-2026.pdf\"");
+        assertThat(presignRequestValue.getObjectRequest().key()).isEqualTo("users/1/report-2026.pdf");
+    }
+
+    @Test
+    @DisplayName("Should handle filenames with spaces and quotes safely in Content-Disposition")
+    void shouldHandleFilenamesWithSpacesAndQuotesInDownloadUrl() throws Exception {
+        FileRecord record = new FileRecord(1L, "My Vacation \"Photo\" 2026.png", "PHOTO", "image/png", 4096L, "users/1/vacation.png");
+        record.setId(15L);
+
+        when(fileRecordRepository.findByIdAndUserId(15L, 1L)).thenReturn(Optional.of(record));
+
+        PresignedGetObjectRequest presignedRequest = mock(PresignedGetObjectRequest.class);
+        when(presignedRequest.url()).thenReturn(new URI("https://test-bucket.s3.us-east-1.amazonaws.com/users/1/vacation.png").toURL());
+        when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presignedRequest);
+
+        var response = fileService.getDownloadUrl(1L, 15L);
+        assertThat(response.get("url")).isNotEmpty();
+
+        ArgumentCaptor<GetObjectPresignRequest> captor = ArgumentCaptor.forClass(GetObjectPresignRequest.class);
+        verify(s3Presigner).presignGetObject(captor.capture());
+
+        assertThat(captor.getValue().getObjectRequest().responseContentDisposition())
+                .isEqualTo("attachment; filename=\"My Vacation \\\"Photo\\\" 2026.png\"");
+    }
+
+    @Test
+    @DisplayName("Should reject download URL if file does not belong to user")
+    void shouldRejectDownloadUrlForUnauthorizedFile() {
+        when(fileRecordRepository.findByIdAndUserId(99L, 1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> fileService.getDownloadUrl(1L, 99L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("File not found or unauthorized");
     }
 
     @Test

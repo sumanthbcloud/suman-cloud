@@ -36,9 +36,16 @@ class FileSecurityTest {
     }
 
     @Test
-    @DisplayName("POST /api/files without authentication should be rejected with 403 Forbidden")
-    void shouldRejectUnauthenticatedPostFiles() throws Exception {
-        mockMvc.perform(post("/api/files"))
+    @DisplayName("GET /api/files/1/url without authentication should be rejected with 403 Forbidden")
+    void shouldRejectUnauthenticatedGetFileUrl() throws Exception {
+        mockMvc.perform(get("/api/files/1/url"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/files/1/download-url without authentication should be rejected with 403 Forbidden")
+    void shouldRejectUnauthenticatedGetFileDownloadUrl() throws Exception {
+        mockMvc.perform(get("/api/files/1/download-url"))
                 .andExpect(status().isForbidden());
     }
 }

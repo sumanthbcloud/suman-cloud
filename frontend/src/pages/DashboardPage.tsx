@@ -53,27 +53,26 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     }
 
     try {
-      let url = preloadedUrl;
-      if (!url) {
-        url = await fileService.getPresignedUrl(file.id);
-      }
-
       if (action === 'download') {
+        const downloadUrl = await fileService.getDownloadUrl(file.id);
         const link = document.createElement('a');
-        link.href = url;
+        link.href = downloadUrl;
         link.download = file.name;
-        link.target = '_blank';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         showToast(`Downloading "${file.name}"...`);
       } else if (action === 'preview') {
+        let url = preloadedUrl;
+        if (!url) {
+          url = await fileService.getPresignedUrl(file.id);
+        }
         setPreviewFile(file);
         setPreviewUrl(url);
         setPreviewOpen(true);
       }
     } catch {
-      showToast('Unable to open this file. Please try again.');
+      showToast(action === 'download' ? 'Unable to download this file. Please try again.' : 'Unable to open this file. Please try again.');
     }
   };
 
@@ -186,6 +185,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           setPreviewFile(null);
           setPreviewUrl(null);
         }}
+        onDownload={(file) => handleFileAction(file, 'download')}
       />
 
       {/* Consumer-Grade Delete Confirmation Modal */}

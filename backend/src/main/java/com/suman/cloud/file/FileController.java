@@ -47,6 +47,13 @@ public class FileController {
         return ResponseEntity.ok(fileService.getPresignedUrl(user.id(), id));
     }
 
+    @GetMapping("/{id}/download-url")
+    public ResponseEntity<Map<String, String>> getDownloadUrl(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable("id") Long id) {
+        return ResponseEntity.ok(fileService.getDownloadUrl(user.id(), id));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteFile(
             @AuthenticationPrincipal AuthenticatedUser user,

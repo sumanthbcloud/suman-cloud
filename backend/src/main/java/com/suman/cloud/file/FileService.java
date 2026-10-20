@@ -85,8 +85,22 @@ public class FileService {
         FileRecord record = fileRecordRepository.findByIdAndUserId(fileId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("File not found or unauthorized"));
 
-        String presignedUrl = generatePresignedGetUrl(record.getObjectKey());
+        String presignedUrl = generatePresignedGetUrl(record.getObjectKey(), null);
         return Map.of("url", presignedUrl);
+    }
+
+    public Map<String, String> getDownloadUrl(Long userId, Long fileId) {
+        FileRecord record = fileRecordRepository.findByIdAndUserId(fileId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("File not found or unauthorized"));
+
+        String rawFilename = record.getFilename();
+        if (rawFilename == null || rawFilename.isBlank()) {
+            rawFilename = "download";
+        }
+        String safeFilename = rawFilename.replace("\r", "").replace("\n", "").replace("\"", "\\\"");
+        String disposition = "attachment; filename=\"" + safeFilename + "\"";
+        String downloadUrl = generatePresignedGetUrl(record.getObjectKey(), disposition);
+        return Map.of("url", downloadUrl);
     }
 
     public Map<String, String> deleteFile(Long userId, Long fileId) {
@@ -136,14 +150,19 @@ public class FileService {
         }
     }
 
-    private String generatePresignedGetUrl(String objectKey) {
+    private String generatePresignedGetUrl(String objectKey, String contentDisposition) {
         try {
             S3Presigner presigner = testS3Presigner != null ? testS3Presigner : S3Presigner.builder().region(Region.of(awsRegion)).build();
             try {
-                GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                GetObjectRequest.Builder getObjectRequestBuilder = GetObjectRequest.builder()
                         .bucket(s3Bucket)
-                        .key(objectKey)
-                        .build();
+                        .key(objectKey);
+
+                if (contentDisposition != null && !contentDisposition.isBlank()) {
+                    getObjectRequestBuilder.responseContentDisposition(contentDisposition);
+                }
+
+                GetObjectRequest getObjectRequest = getObjectRequestBuilder.build();
 
                 GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
                         .signatureDuration(Duration.ofHours(1))

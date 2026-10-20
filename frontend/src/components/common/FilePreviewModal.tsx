@@ -1,12 +1,14 @@
 import React from 'react';
 import { X, Download, ExternalLink } from 'lucide-react';
 import type { CloudFile } from '../../types';
+import { fileService } from '../../services/fileService';
 
 interface FilePreviewModalProps {
   file: CloudFile | null;
   url: string | null;
   isOpen: boolean;
   onClose: () => void;
+  onDownload?: (file: CloudFile) => void;
 }
 
 export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
@@ -14,8 +16,27 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
   url,
   isOpen,
   onClose,
+  onDownload,
 }) => {
   if (!isOpen || !file || !url) return null;
+
+  const handleDownload = async () => {
+    if (onDownload) {
+      onDownload(file);
+      return;
+    }
+    try {
+      const downloadUrl = await fileService.getDownloadUrl(file.id);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch {
+      window.location.href = url;
+    }
+  };
 
   const isPhoto = file.category === 'photos' || file.mimeType.startsWith('image/');
   const isVideo = file.category === 'videos' || file.mimeType.startsWith('video/');
@@ -51,14 +72,14 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
             >
               <ExternalLink className="w-4 h-4" />
             </a>
-            <a
-              href={url}
-              download={file.name}
-              className="p-1.5 rounded-lg text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="p-1.5 rounded-lg text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
               title="Download file"
             >
               <Download className="w-4 h-4" />
-            </a>
+            </button>
             <button
               type="button"
               onClick={onClose}
@@ -117,15 +138,14 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
               <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 mb-4">
                 You can download the file or open it directly in a new window.
               </p>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors"
+              <button
+                type="button"
+                onClick={handleDownload}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
               >
                 <Download className="w-4 h-4" />
-                <span>Open / Download file</span>
-              </a>
+                <span>Download file</span>
+              </button>
             </div>
           )}
         </div>

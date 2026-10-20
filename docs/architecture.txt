@@ -1,0 +1,121 @@
+================================================================================
+SUMAN CLOUD — ARCHITECTURE OVERVIEW
+Platform : AWS EC2 + Docker Compose + Amazon S3
+Design   : Simple, Secure, Production-Ready Demo
+================================================================================
+
+1. SYSTEM DIAGRAM
+--------------------------------------------------------------------------------
+
+                              [ User / Browser ]
+                                      |
+                                      | HTTP :80
+                                      v
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ AWS EC2 (Docker Compose Network: suman-cloud_default)                        │
+│                                                                              │
+│  [ frontend ]  : Nginx + React 19 (Port 80:80)                               │
+│        |         Serves SPA static files & proxies /api/* calls              │
+│        |                                                                     │
+│        | HTTP (internal DNS)                                                 │
+│        v                                                                     │
+│  [ backend ]   : Spring Boot 3.4 / Java 21 (Port 8080 - internal only)       │
+│        |         Auth (JWT), Business logic, S3 presigned URL generation     │
+│        |                                                                     │
+│        | JDBC (internal DNS)                                                 │
+│        v                                                                     │
+│  [ postgres ]  : PostgreSQL 16 Alpine (Port 5432 - internal only)            │
+│        |         User accounts & file metadata                               │
+│        v                                                                     │
+│   (postgres_data volume)                                                     │
+└──────────────────────────────────────┬───────────────────────────────────────┘
+                                       |
+                                       | AWS SDK v2 (EC2 IAM Role)
+                                       v
+                             [ Amazon S3 Bucket ]
+                             Private binary storage
+
+
+2. COMPONENT RESPONSIBILITIES
+--------------------------------------------------------------------------------
+* Frontend (Nginx 1.27 + React 19):
+  - Ingress point on port 80.
+  - Serves compiled static assets with SPA routing fallback.
+  - Proxies `/api/*` directly to `http://backend:8080/api/*`.
+
+* Backend (Spring Boot 3.4 / OpenJDK 21):
+  - Handles authentication (JWT, BCrypt) and REST endpoints.
+  - Generates secure, short-lived presigned S3 URLs for uploads and previews.
+  - Interacts with PostgreSQL via Spring Data JPA.
+  - Sanitizes errors so internal DB/SQL details never reach users.
+
+* Database (PostgreSQL 16 Alpine):
+  - Stores user profiles and file metadata (name, size, MIME type, s3_key).
+  - Persisted via Docker named volume `postgres_data`.
+  - Air-gapped on internal Docker bridge network (no host ports exposed).
+
+* Object Storage (Amazon S3):
+  - Private S3 bucket storing actual binary files (photos, videos, docs).
+  - Zero binary files are stored in PostgreSQL.
+  - Block Public Access enabled; files accessed only via presigned URLs.
+
+
+3. SECURITY POSTURE
+--------------------------------------------------------------------------------
+* Zero Static AWS Credentials:
+  The backend discovers AWS credentials automatically through the EC2 IAM
+  instance role via AWS STS default credential provider chain.
+
+* Network Isolation:
+  Only Nginx (port 80) is exposed to the outside world. Both PostgreSQL and
+  Spring Boot communicate exclusively over the internal Docker network.
+
+* Safe Error Handling:
+  Raw SQL, table names, and AWS exception traces are logged on the server
+  but replaced with clean user-friendly messages on the client.
+
+
+4. CI/CD & DEPLOYMENT PIPELINE
+--------------------------------------------------------------------------------
+GitHub Actions builds and publishes immutable container images:
+
+  Code Push (main)
+        │
+        ▼
+  Gitleaks Secret Scan ──> Fails if hardcoded secrets exist
+        │
+        ▼
+  Build & Test ──────────> Frontend: npm run build | Backend: ./mvnw test
+        │
+        ▼
+  Docker Build ──────────> Builds production container images
+        │
+        ▼
+  Trivy Scan ────────────> Fails on HIGH/CRITICAL container vulnerabilities
+        │
+        ▼
+  Docker Hub Push ───────> Tagged with Git commit SHA:
+                           - sumanthb9908/suman-cloud:frontend-<SHA>
+                           - sumanthb9908/suman-cloud:backend-<SHA>
+        │
+        ▼
+  EC2 Deployment ────────> docker compose pull && docker compose up -d
+
+
+5. OPERATIONAL CHEATSHEET
+--------------------------------------------------------------------------------
+# Start application
+IMAGE_TAG=<COMMIT_SHA> docker compose up -d
+
+# Check service health
+docker compose ps
+
+# View backend logs
+docker compose logs -f backend
+
+# Apply legacy database cleanup (one-time if upgrading older DB)
+docker compose exec -T postgres psql -U suman -d suman < backend/db/cleanup-legacy-auth.sql
+
+# Database backup
+docker compose exec -T postgres pg_dump -U suman suman > backup.sql
+================================================================================

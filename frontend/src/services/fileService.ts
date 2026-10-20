@@ -71,6 +71,11 @@ export const fileService = {
     return res.url;
   },
 
+  async getDownloadUrl(id: string | number): Promise<string> {
+    const res = await fetchJson<{ url: string }>(`/api/files/${id}/download-url`);
+    return res.url;
+  },
+
   async deleteFile(id: string | number): Promise<void> {
     await fetchJson<{ message: string }>(`/api/files/${id}`, {
       method: 'DELETE',
