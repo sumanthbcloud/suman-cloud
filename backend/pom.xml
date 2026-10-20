@@ -59,12 +59,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- AWS SDK v2 for SES & S3 -->
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>ses</artifactId>
-        </dependency>
-
+        <!-- AWS SDK v2 for S3 -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>

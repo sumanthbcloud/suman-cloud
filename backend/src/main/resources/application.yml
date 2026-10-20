@@ -34,7 +34,6 @@ app:
   aws:
     region: ${AWS_REGION:us-east-1}
     s3-bucket: ${S3_BUCKET:suman-cloud-storage}
-    ses-from-email: ${SES_FROM_EMAIL:noreply@suman.cloud}
   cors:
     allowed-origins:
       - "http://localhost:5173"

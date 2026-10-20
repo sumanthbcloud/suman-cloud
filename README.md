@@ -15,7 +15,6 @@ The initial deployment architecture is intentionally simple, small, and robust:
   3. `postgres` (Official `postgres:16-alpine` container persisted with named volume `postgres_data`)
 - **External AWS Services**:
   - **Amazon S3**: For uploaded user binary objects (photos, videos, audio, documents)
-  - **Amazon SES**: For real email delivery and signup OTP verification
 - **AWS Authentication**: EC2 IAM Instance Role (no static AWS keys stored in code or config)
 
 > **Important**: Amazon RDS is NOT used in the initial architecture. PostgreSQL is the application database and will run as the PostgreSQL Docker Compose service on EC2. RDS is reserved only as a future architecture evolution.
@@ -30,7 +29,7 @@ SUMAN/
 │   ├── src/
 │   │   ├── components/   # Simple, reusable UI components & modal preview
 │   │   ├── layouts/      # AppLayout, Sidebar, Topbar
-│   │   ├── pages/        # LoginPage, SignupPage, VerifyOtpPage, DashboardPage
+│   │   ├── pages/        # LoginPage, SignupPage, DashboardPage
 │   │   ├── services/     # API client, authService, fileService
 │   │   └── types/        # TypeScript interfaces & domain types
 │   ├── Dockerfile        # Multi-stage Node 20 build -> Nginx Alpine
@@ -41,9 +40,8 @@ SUMAN/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/com/suman/cloud/
-│   │   │   │   ├── auth/            # Signup, OTP verify, Login endpoints & service
+│   │   │   │   ├── auth/            # Signup & Login endpoints and service
 │   │   │   │   ├── config/          # WebMvc, CORS, GlobalExceptionHandler
-│   │   │   │   ├── email/           # EmailService for Amazon SES
 │   │   │   │   ├── file/            # FileController, FileService, FileRecord
 │   │   │   │   ├── health/          # Health check endpoint (/api/health)
 │   │   │   │   ├── security/        # JWT service, filter, SecurityConfig
@@ -83,7 +81,7 @@ cd suman-cloud
 
 # Prepare environment configuration
 cp .env.example .env
-nano .env  # Enter your JWT_SECRET, S3_BUCKET, SES_FROM_EMAIL, and DOCKERHUB_USERNAME
+nano .env  # Enter your JWT_SECRET, S3_BUCKET, and DOCKERHUB_USERNAME
 ```
 
 ### 2. Run Application
@@ -145,9 +143,8 @@ npm run dev
 | `DB_HOST` | `postgres` | Database hostname (`localhost` for local dev outside Docker) |
 | `DB_PORT` | `5432` | Database port |
 | `JWT_SECRET` | *(random secret)* | Key for signing JWTs (256-bit or longer) |
-| `AWS_REGION` | `us-east-1` | AWS Region for S3 and SES |
+| `AWS_REGION` | `us-east-1` | AWS Region for S3 |
 | `S3_BUCKET` | `your-suman-bucket` | Amazon S3 bucket name |
-| `SES_FROM_EMAIL` | `verified@example.com` | Verified Amazon SES sender address |
 | `DOCKERHUB_USERNAME`| `sumanthb9908` | Docker Hub username for pulling images |
 | `IMAGE_TAG` | *(git-commit-sha)* | Image version tag (Git commit SHA) |
 

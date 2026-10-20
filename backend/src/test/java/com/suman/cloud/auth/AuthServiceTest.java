@@ -3,8 +3,6 @@ package com.suman.cloud.auth;
 import com.suman.cloud.auth.dto.AuthResponse;
 import com.suman.cloud.auth.dto.LoginRequest;
 import com.suman.cloud.auth.dto.SignupRequest;
-import com.suman.cloud.auth.dto.VerifyRequest;
-import com.suman.cloud.email.EmailService;
 import com.suman.cloud.security.JwtService;
 import com.suman.cloud.user.User;
 import com.suman.cloud.user.UserRepository;
@@ -12,12 +10,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,9 +31,6 @@ class AuthServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private EmailService emailService;
-
-    @Mock
     private JwtService jwtService;
 
     private PasswordEncoder passwordEncoder;
@@ -44,77 +39,150 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
-        authService = new AuthService(userRepository, passwordEncoder, jwtService, emailService);
+        authService = new AuthService(userRepository, passwordEncoder, jwtService);
     }
 
     @Test
-    @DisplayName("Signup should create user with unverified email, OTP, and send email")
+    @DisplayName("Signup should successfully create a user with hashed password without OTP/SES")
     void shouldSignupSuccessfully() {
-        SignupRequest request = new SignupRequest("Suman", "user@example.com", "pass123");
+        SignupRequest request = new SignupRequest("sumankumar", "user@example.com", "pass123");
+        when(userRepository.existsByUsernameIgnoreCase("sumankumar")).thenReturn(false);
         when(userRepository.existsByEmail("user@example.com")).thenReturn(false);
 
         AuthResponse response = authService.signup(request);
 
-        assertThat(response.message()).contains("verify the 6-digit code");
-        verify(userRepository).save(any(User.class));
-        verify(emailService).sendOtp(eq("user@example.com"), anyString());
+        assertThat(response.message()).contains("registered successfully");
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        User savedUser = captor.getValue();
+        assertThat(savedUser.getUsername()).isEqualTo("sumankumar");
+        assertThat(savedUser.getEmail()).isEqualTo("user@example.com");
+        assertThat(passwordEncoder.matches("pass123", savedUser.getPassword())).isTrue();
     }
 
     @Test
-    @DisplayName("Signup should fail when SES fails to deliver OTP")
-    void shouldFailSignupWhenSesFails() {
-        SignupRequest request = new SignupRequest("Suman", "user@example.com", "pass123");
-        when(userRepository.existsByEmail("user@example.com")).thenReturn(false);
-        doThrow(new IllegalStateException("Failed to send verification email. Check Amazon SES configuration."))
-                .when(emailService).sendOtp(eq("user@example.com"), anyString());
+    @DisplayName("Signup should reject duplicate username")
+    void shouldRejectDuplicateUsernameOnSignup() {
+        SignupRequest request = new SignupRequest("sumankumar", "unique@example.com", "pass123");
+        when(userRepository.existsByUsernameIgnoreCase("sumankumar")).thenReturn(true);
 
         assertThatThrownBy(() -> authService.signup(request))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Check Amazon SES configuration");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Username already exists");
+
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    @DisplayName("Verify OTP should activate user and clear OTP fields")
-    void shouldVerifyOtpSuccessfully() {
-        User user = new User("Suman", "user@example.com", passwordEncoder.encode("pass123"));
-        user.setOtpCode("123456");
-        user.setOtpExpiresAt(LocalDateTime.now().plusMinutes(5));
+    @DisplayName("Signup should reject duplicate email")
+    void shouldRejectDuplicateEmailOnSignup() {
+        SignupRequest request = new SignupRequest("uniqueuser", "existing@example.com", "pass123");
+        when(userRepository.existsByUsernameIgnoreCase("uniqueuser")).thenReturn(false);
+        when(userRepository.existsByEmail("existing@example.com")).thenReturn(true);
 
-        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+        assertThatThrownBy(() -> authService.signup(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Email already exists");
 
-        AuthResponse response = authService.verify(new VerifyRequest("user@example.com", "123456"));
-
-        assertThat(response.message()).contains("Email verified successfully");
-        assertThat(user.isEmailVerified()).isTrue();
-        assertThat(user.getOtpCode()).isNull();
-        verify(userRepository).save(user);
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    @DisplayName("Login should return JWT when credentials are valid and email is verified")
-    void shouldLoginSuccessfully() {
-        User user = new User("Suman", "user@example.com", passwordEncoder.encode("pass123"));
+    @DisplayName("Signup should reject missing required fields")
+    void shouldRejectMissingRequiredFieldsOnSignup() {
+        SignupRequest missingUsername = new SignupRequest("", "user@example.com", "pass123");
+        assertThatThrownBy(() -> authService.signup(missingUsername))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Required fields missing");
+
+        SignupRequest missingEmail = new SignupRequest("suman", "  ", "pass123");
+        assertThatThrownBy(() -> authService.signup(missingEmail))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Required fields missing");
+
+        SignupRequest missingPassword = new SignupRequest("suman", "user@example.com", null);
+        assertThatThrownBy(() -> authService.signup(missingPassword))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Required fields missing");
+    }
+
+    @Test
+    @DisplayName("Login using username should succeed and return JWT token")
+    void shouldLoginSuccessfullyUsingUsername() {
+        User user = new User("sumankumar", "user@example.com", passwordEncoder.encode("pass123"));
         user.setId(10L);
-        user.setEmailVerified(true);
 
+        when(userRepository.findByUsernameIgnoreCase("sumankumar")).thenReturn(Optional.of(user));
+        when(jwtService.generateToken(10L, "user@example.com")).thenReturn("mock-jwt-token");
+
+        AuthResponse response = authService.login(new LoginRequest("sumankumar", "pass123"));
+
+        assertThat(response.token()).isEqualTo("mock-jwt-token");
+        assertThat(response.name()).isEqualTo("sumankumar");
+        assertThat(response.email()).isEqualTo("user@example.com");
+    }
+
+    @Test
+    @DisplayName("Login using email should succeed and return JWT token")
+    void shouldLoginSuccessfullyUsingEmail() {
+        User user = new User("sumankumar", "user@example.com", passwordEncoder.encode("pass123"));
+        user.setId(10L);
+
+        when(userRepository.findByUsernameIgnoreCase("user@example.com")).thenReturn(Optional.empty());
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(jwtService.generateToken(10L, "user@example.com")).thenReturn("mock-jwt-token");
 
         AuthResponse response = authService.login(new LoginRequest("user@example.com", "pass123"));
 
         assertThat(response.token()).isEqualTo("mock-jwt-token");
+        assertThat(response.email()).isEqualTo("user@example.com");
     }
 
     @Test
-    @DisplayName("Login should reject unverified users")
-    void shouldRejectUnverifiedUserOnLogin() {
-        User user = new User("Suman", "user@example.com", passwordEncoder.encode("pass123"));
-        user.setEmailVerified(false);
+    @DisplayName("Login should reject incorrect password")
+    void shouldRejectIncorrectPasswordOnLogin() {
+        User user = new User("sumankumar", "user@example.com", passwordEncoder.encode("correctPassword"));
 
-        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByUsernameIgnoreCase("sumankumar")).thenReturn(Optional.of(user));
 
-        assertThatThrownBy(() -> authService.login(new LoginRequest("user@example.com", "pass123")))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("not verified");
+        assertThatThrownBy(() -> authService.login(new LoginRequest("sumankumar", "wrongPassword")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Invalid username/email or password");
+    }
+
+    @Test
+    @DisplayName("Existing email-only user without username can still log in using email")
+    void shouldAllowExistingEmailOnlyUserToLogin() {
+        User legacyUser = new User();
+        legacyUser.setId(42L);
+        legacyUser.setName("Legacy Suman");
+        legacyUser.setEmail("legacy@example.com");
+        legacyUser.setPassword(passwordEncoder.encode("legacySecret"));
+        legacyUser.setUsername(null); // existing user has no username
+
+        when(userRepository.findByUsernameIgnoreCase("legacy@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("legacy@example.com")).thenReturn(Optional.of(legacyUser));
+        when(jwtService.generateToken(42L, "legacy@example.com")).thenReturn("legacy-jwt-token");
+
+        AuthResponse response = authService.login(new LoginRequest("legacy@example.com", "legacySecret"));
+
+        assertThat(response.token()).isEqualTo("legacy-jwt-token");
+        assertThat(response.name()).isEqualTo("Legacy Suman");
+        assertThat(response.email()).isEqualTo("legacy@example.com");
+    }
+
+    @Test
+    @DisplayName("Login should reject missing required fields")
+    void shouldRejectMissingRequiredFieldsOnLogin() {
+        LoginRequest missingIdentifier = new LoginRequest(" ", "pass123");
+        assertThatThrownBy(() -> authService.login(missingIdentifier))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Required fields missing");
+
+        LoginRequest missingPassword = new LoginRequest("suman", null);
+        assertThatThrownBy(() -> authService.login(missingPassword))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Required fields missing");
     }
 }

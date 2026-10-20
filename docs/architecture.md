@@ -37,26 +37,25 @@ The initial deployment runs on a **single Amazon EC2 instance** orchestrated via
 │                                                  │ container       │   │
 │                                                  │ (Official image)│   │
 │                                                  └────────┬────────┘   │
-│                                                           │            │
-│                                        Named Volume       ▼            │
-│                                                  [postgres_data]       │
-└───────────────────────────────────┬──────────────────────┬─────────────┘
-                                    │                      │
-                   AWS SDK (IAM Role)                      │ AWS SDK (IAM Role)
-                                    ▼                      ▼
-                        ┌──────────────────────┐┌──────────────────────┐
-                        │      Amazon S3       ││      Amazon SES      │
-                        │  (Binary File Store) ││  (OTP / Email Auth)  │
-                        └──────────────────────┘└──────────────────────┘
+│                                                           │
+│                                        Named Volume       ▼
+│                                                  [postgres_data]
+└───────────────────────────────────┬──────────────────────────────────────────┘
+                                    │
+                   AWS SDK (IAM Role)
+                                    ▼
+                        ┌──────────────────────┐
+                        │      Amazon S3       │
+                        │  (Binary File Store) │
+                        └──────────────────────┘
 ```
 
 ### Initial Deployment Rules
 - **No Amazon RDS in the initial version**: PostgreSQL runs as an official Docker container inside Compose, with data persisted via a named volume (`postgres_data`). RDS is reserved strictly as a future evolution.
 - **External AWS Managed Services**:
   - **Amazon S3**: Stores binary file payloads (photos, videos, audio, documents).
-  - **Amazon SES**: Delivers signup and verification OTP emails.
 - **AWS Authentication via EC2 IAM Role**:
-  - The EC2 instance assumes an IAM Instance Role granting minimal permissions for S3 bucket access and SES email sending.
+  - The EC2 instance assumes an IAM Instance Role granting minimal permissions for S3 bucket access.
   - No static AWS access keys or secrets are stored in the codebase or environment files.
 - **Network Isolation**: PostgreSQL is on the internal Compose network and not exposed to the public internet.
 
@@ -80,7 +79,6 @@ The backend is built as **one clean Spring Boot application** (Java 21, Maven).
 ### Simple Layered Flow:
 - **General Database Operations**: `Controller` → `Service` → `Repository` → `PostgreSQL`
 - **File Upload / Download**: `Controller` → `Service` → `Amazon S3`
-- **Email Verification**: `Controller` → `Service` → `Amazon SES`
 
 ### Package Structure:
 ```

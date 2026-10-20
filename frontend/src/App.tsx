@@ -3,7 +3,6 @@ import { AppLayout } from './layouts/AppLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
-import { VerifyOtpPage } from './pages/VerifyOtpPage';
 import { authService } from './services/authService';
 import { fileService } from './services/fileService';
 import type { CloudFile, FileCategory, StorageOverviewData } from './types';
@@ -11,10 +10,10 @@ import type { CloudFile, FileCategory, StorageOverviewData } from './types';
 const TOTAL_STORAGE_BYTES = 53_687_091_200; // 50 GB demo quota
 
 export function App() {
-  const [view, setView] = useState<'app' | 'login' | 'signup' | 'verify'>(() =>
+  const [view, setView] = useState<'app' | 'login' | 'signup'>(() =>
     authService.isAuthenticated() ? 'app' : 'login'
   );
-  const [verifyEmail, setVerifyEmail] = useState('');
+  const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(null);
   const [user, setUser] = useState<{ name: string; email: string } | null>(() =>
     authService.getCurrentUser()
   );
@@ -109,20 +108,22 @@ export function App() {
     authService.logout();
     setUser(null);
     setFiles([]);
+    setLoginSuccessMessage(null);
     setView('login');
   };
 
   if (view === 'login') {
     return (
       <LoginPage
+        successMessage={loginSuccessMessage}
         onLoginSuccess={() => {
+          setLoginSuccessMessage(null);
           setUser(authService.getCurrentUser());
           setView('app');
         }}
-        onNavigateToSignup={() => setView('signup')}
-        onNavigateToVerify={(email) => {
-          setVerifyEmail(email);
-          setView('verify');
+        onNavigateToSignup={() => {
+          setLoginSuccessMessage(null);
+          setView('signup');
         }}
       />
     );
@@ -131,21 +132,14 @@ export function App() {
   if (view === 'signup') {
     return (
       <SignupPage
-        onSignupSuccess={(email) => {
-          setVerifyEmail(email);
-          setView('verify');
+        onSignupSuccess={() => {
+          setLoginSuccessMessage('Account created successfully. Please sign in.');
+          setView('login');
         }}
-        onNavigateToLogin={() => setView('login')}
-      />
-    );
-  }
-
-  if (view === 'verify') {
-    return (
-      <VerifyOtpPage
-        initialEmail={verifyEmail}
-        onVerifySuccess={() => setView('login')}
-        onNavigateToLogin={() => setView('login')}
+        onNavigateToLogin={() => {
+          setLoginSuccessMessage(null);
+          setView('login');
+        }}
       />
     );
   }

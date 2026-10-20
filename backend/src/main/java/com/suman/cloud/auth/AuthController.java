@@ -3,7 +3,6 @@ package com.suman.cloud.auth;
 import com.suman.cloud.auth.dto.AuthResponse;
 import com.suman.cloud.auth.dto.LoginRequest;
 import com.suman.cloud.auth.dto.SignupRequest;
-import com.suman.cloud.auth.dto.VerifyRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,11 +22,6 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> signup(@RequestBody SignupRequest request) {
         return ResponseEntity.ok(authService.signup(request));
-    }
-
-    @PostMapping("/verify")
-    public ResponseEntity<AuthResponse> verify(@RequestBody VerifyRequest request) {
-        return ResponseEntity.ok(authService.verify(request));
     }
 
     @PostMapping("/login")

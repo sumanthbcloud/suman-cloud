@@ -12,12 +12,12 @@ class UserTest {
     @Test
     @DisplayName("User entity initializes with default values and sets createdAt on onCreate")
     void shouldInitializeUserCorrectly() {
-        User user = new User("Suman", "suman@example.com", "secretHash");
+        User user = new User("sumankumar", "suman@example.com", "secretHash");
 
-        assertEquals("Suman", user.getName());
+        assertEquals("sumankumar", user.getUsername());
+        assertEquals("sumankumar", user.getName());
         assertEquals("suman@example.com", user.getEmail());
         assertEquals("secretHash", user.getPassword());
-        assertFalse(user.isEmailVerified());
         assertNull(user.getCreatedAt());
 
         user.onCreate();
@@ -30,18 +30,18 @@ class UserTest {
     void shouldUpdateUserProperties() {
         User user = new User();
         user.setId(1L);
+        user.setUsername("janedoe");
         user.setName("Jane Doe");
         user.setEmail("jane@example.com");
         user.setPassword("hashed123");
-        user.setEmailVerified(true);
         LocalDateTime now = LocalDateTime.now();
         user.setCreatedAt(now);
 
         assertEquals(1L, user.getId());
+        assertEquals("janedoe", user.getUsername());
         assertEquals("Jane Doe", user.getName());
         assertEquals("jane@example.com", user.getEmail());
         assertEquals("hashed123", user.getPassword());
-        assertTrue(user.isEmailVerified());
         assertEquals(now, user.getCreatedAt());
     }
 }

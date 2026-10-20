@@ -3,7 +3,7 @@ import { SumanLogo } from '../components/common/SumanLogo';
 import { authService } from '../services/authService';
 
 interface SignupPageProps {
-  onSignupSuccess: (email: string) => void;
+  onSignupSuccess: () => void;
   onNavigateToLogin: () => void;
 }
 
@@ -11,7 +11,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({
   onSignupSuccess,
   onNavigateToLogin,
 }) => {
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,13 +23,14 @@ export const SignupPage: React.FC<SignupPageProps> = ({
     setLoading(true);
 
     try {
+      const cleanUsername = username.trim();
       const cleanEmail = email.trim().toLowerCase();
       await authService.signup({
-        name: name.trim(),
+        username: cleanUsername,
         email: cleanEmail,
         password,
       });
-      onSignupSuccess(cleanEmail);
+      onSignupSuccess();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Registration failed';
       setError(msg);
@@ -63,19 +64,19 @@ export const SignupPage: React.FC<SignupPageProps> = ({
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label
-                htmlFor="name"
+                htmlFor="username"
                 className="block text-xs font-semibold text-slate-700 mb-1"
               >
-                Full name
+                Username
               </label>
               <input
-                id="name"
-                name="name"
+                id="username"
+                name="username"
                 type="text"
                 required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Suman Kumar"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="sumankumar"
                 className="w-full bg-slate-50 focus:bg-white border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 outline-none transition-colors"
               />
             </div>
@@ -111,6 +112,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({
                 id="password"
                 name="password"
                 type="password"
+                autoComplete="new-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

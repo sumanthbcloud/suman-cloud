@@ -17,6 +17,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
+    private String username;
+
     @Column(nullable = false)
     private String name;
 
@@ -26,25 +29,24 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private boolean emailVerified = false;
-
-    @Column(length = 10)
-    private String otpCode;
-
-    private LocalDateTime otpExpiresAt;
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public User() {
     }
 
-    public User(String name, String email, String password) {
-        this.name = name;
+    public User(String username, String email, String password) {
+        this.username = username;
+        this.name = username != null ? username : "";
         this.email = email;
         this.password = password;
-        this.emailVerified = false;
+    }
+
+    public User(String username, String name, String email, String password) {
+        this.username = username;
+        this.name = name != null ? name : (username != null ? username : "");
+        this.email = email;
+        this.password = password;
     }
 
     @PrePersist
@@ -60,6 +62,14 @@ public class User {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getName() {
@@ -84,30 +94,6 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public boolean isEmailVerified() {
-        return emailVerified;
-    }
-
-    public void setEmailVerified(boolean emailVerified) {
-        this.emailVerified = emailVerified;
-    }
-
-    public String getOtpCode() {
-        return otpCode;
-    }
-
-    public void setOtpCode(String otpCode) {
-        this.otpCode = otpCode;
-    }
-
-    public LocalDateTime getOtpExpiresAt() {
-        return otpExpiresAt;
-    }
-
-    public void setOtpExpiresAt(LocalDateTime otpExpiresAt) {
-        this.otpExpiresAt = otpExpiresAt;
     }
 
     public LocalDateTime getCreatedAt() {
