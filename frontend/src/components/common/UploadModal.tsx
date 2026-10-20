@@ -21,6 +21,13 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
   if (!isOpen) return null;
 
+  const resetFileSelection = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -40,6 +47,13 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     e.preventDefault();
   };
 
+  const handleBrowseClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) return;
     setUploading(true);
@@ -47,7 +61,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
     try {
       await fileService.uploadFile(selectedFile);
-      setSelectedFile(null);
+      resetFileSelection();
       onUploadSuccess();
       onClose();
     } catch {
@@ -59,7 +73,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
   const handleClose = () => {
     if (uploading) return;
-    setSelectedFile(null);
+    resetFileSelection();
     setError(null);
     onClose();
   };
@@ -77,6 +91,9 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
+          onClick={(e) => {
+            (e.target as HTMLInputElement).value = '';
+          }}
           className="hidden"
         />
 
@@ -109,7 +126,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={handleBrowseClick}
           className="mt-5 border-2 border-dashed border-slate-200 dark:border-white/[0.12] hover:border-blue-500 dark:hover:border-blue-400 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/60 dark:bg-[#14151a] hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all cursor-pointer group"
         >
           {selectedFile ? (
@@ -157,7 +174,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={selectedFile ? handleUpload : () => fileInputRef.current?.click()}
+              onClick={selectedFile ? handleUpload : handleBrowseClick}
               disabled={uploading}
               className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800/60 rounded-xl transition-colors shadow-xs cursor-pointer"
             >
