@@ -11,10 +11,11 @@ RUN ./mvnw clean package -DskipTests
 
 # Stage 2: Minimal Java 21 runtime
 FROM eclipse-temurin:21-jre-alpine
+RUN apk upgrade --no-cache
 WORKDIR /app
 
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/target/*.jar app
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app"]
