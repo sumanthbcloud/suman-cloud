@@ -148,5 +148,14 @@ npm run dev
 | `AWS_REGION` | `us-east-1` | AWS Region for S3 and SES |
 | `S3_BUCKET` | `your-suman-bucket` | Amazon S3 bucket name |
 | `SES_FROM_EMAIL` | `verified@example.com` | Verified Amazon SES sender address |
-| `DOCKERHUB_USERNAME`| `your-dockerhub-user` | Docker Hub username for pulling images |
-| `IMAGE_TAG` | `latest` | Image version tag (`latest` or Git commit SHA) |
+| `DOCKERHUB_USERNAME`| `sumanthb9908` | Docker Hub username for pulling images |
+| `IMAGE_TAG` | *(git-commit-sha)* | Image version tag (Git commit SHA) |
+
+---
+
+## GitHub Actions CI Configuration
+
+Configured under GitHub repository **Settings** → **Secrets and variables** → **Actions**:
+
+- **Repository Variable**: `DOCKERHUB_USERNAME = sumanthb9908`
+- **Repository Secret**: `DOCKERHUB_TOKEN = <dockerhub-access-token>`
