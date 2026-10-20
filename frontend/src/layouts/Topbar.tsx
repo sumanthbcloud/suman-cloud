@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { SumanLogo } from '../components/common/SumanLogo';
 import { Avatar } from '../components/common/Avatar';
+import { ThemeToggle } from '../components/common/ThemeToggle';
 
 interface TopbarProps {
   onToggleSidebar: () => void;
@@ -28,13 +29,13 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 h-16 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between gap-4 transition-colors duration-200">
       {/* Left: Mobile Toggle & Brand */}
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="p-2 -ml-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 lg:hidden transition-colors"
+          className="p-2 -ml-2 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden transition-colors"
           aria-label="Toggle Navigation"
         >
           <Menu className="w-5 h-5" />
@@ -49,19 +50,21 @@ export const Topbar: React.FC<TopbarProps> = ({
       {/* Center: Search Bar */}
       <div className="flex-1 max-w-md mx-auto">
         <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search files..."
-            className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-900 placeholder-slate-400 transition-colors outline-none"
+            className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:focus:bg-slate-800 border border-slate-200 dark:border-slate-700/80 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors outline-none"
           />
         </div>
       </div>
 
-      {/* Right: Upload Button & Simple Profile Menu */}
-      <div className="flex items-center gap-3">
+      {/* Right: Upload Button, Theme Toggle & User Menu */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        <ThemeToggle />
+
         <button
           type="button"
           id="topbar-upload-btn"
@@ -72,12 +75,12 @@ export const Topbar: React.FC<TopbarProps> = ({
           <span>Upload</span>
         </button>
 
-          {/* User Profile */}
+        {/* User Profile */}
         <div className="relative">
           <button
             type="button"
             onClick={() => setUserMenuOpen(!userMenuOpen)}
-            className="flex items-center gap-2 p-1 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+            className="flex items-center gap-2 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             aria-label="User menu"
           >
             <Avatar name={user?.name || 'Suman'} size="sm" />
@@ -85,10 +88,10 @@ export const Topbar: React.FC<TopbarProps> = ({
 
           {/* Profile Dropdown */}
           {userMenuOpen && (
-            <div className="absolute right-0 mt-2 w-52 rounded-xl bg-white border border-slate-200 shadow-lg p-1.5 text-xs z-50 text-left">
-              <div className="px-3 py-2 border-b border-slate-100 mb-1">
-                <p className="font-semibold text-slate-900">{user?.name || 'Suman'}</p>
-                <p className="text-[11px] text-slate-500 truncate">{user?.email || 'user@example.com'}</p>
+            <div className="absolute right-0 mt-2 w-52 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg p-1.5 text-xs z-50 text-left transition-colors">
+              <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700/80 mb-1">
+                <p className="font-semibold text-slate-900 dark:text-white">{user?.name || 'Suman'}</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user?.email || 'user@example.com'}</p>
               </div>
 
               <div className="mt-1 pt-1">
@@ -98,7 +101,7 @@ export const Topbar: React.FC<TopbarProps> = ({
                     setUserMenuOpen(false);
                     if (onSignOut) onSignOut();
                   }}
-                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>Sign out</span>

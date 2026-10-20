@@ -21,7 +21,7 @@ export const Avatar: React.FC<AvatarProps> = ({ name, size = 'md' }) => {
 
   return (
     <div
-      className={`${sizeClasses} rounded-full bg-slate-100 text-slate-700 font-semibold border border-slate-200 flex items-center justify-center select-none shadow-xs`}
+      className={`${sizeClasses} rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold border border-slate-200 dark:border-slate-700 flex items-center justify-center select-none shadow-xs transition-colors`}
     >
       {initials}
     </div>

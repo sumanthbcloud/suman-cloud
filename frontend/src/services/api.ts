@@ -1,5 +1,5 @@
 /**
- * Base API client configuration for SUMAN backend communication.
+ * Base API client configuration for SUMAN CLOUD backend communication.
  * Connects to /api/ in Docker/production or VITE_API_BASE_URL in local dev.
  */
 const rawBase = import.meta.env.VITE_API_BASE_URL !== undefined 

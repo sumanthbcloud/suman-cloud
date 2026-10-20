@@ -24,20 +24,20 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-xs transition-opacity duration-200"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-3xl rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden text-left flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-3xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden text-left flex flex-col max-h-[90vh] transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-white">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="min-w-0 pr-4">
-            <h3 className="text-sm font-semibold text-slate-900 truncate" title={file.name}>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate" title={file.name}>
               {file.name}
             </h3>
-            <p className="text-[11px] text-slate-400 capitalize">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 capitalize">
               {file.category} • {file.mimeType}
             </p>
           </div>
@@ -46,7 +46,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="Open in new window"
             >
               <ExternalLink className="w-4 h-4" />
@@ -54,7 +54,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
             <a
               href={url}
               download={file.name}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="Download file"
             >
               <Download className="w-4 h-4" />
@@ -62,7 +62,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -70,7 +70,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
         </div>
 
         {/* Content Viewer */}
-        <div className="p-4 flex items-center justify-center bg-slate-950/5 overflow-auto min-h-[280px]">
+        <div className="p-4 flex items-center justify-center bg-slate-950/5 dark:bg-black/40 overflow-auto min-h-[280px]">
           {isPhoto && (
             <img
               src={url}
@@ -91,8 +91,8 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
           )}
 
           {isAudio && (
-            <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-xs border border-slate-200 flex flex-col items-center gap-4">
-              <p className="text-xs font-medium text-slate-700 text-center truncate w-full">
+            <div className="w-full max-w-md p-6 bg-white dark:bg-slate-800 rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 flex flex-col items-center gap-4">
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-200 text-center truncate w-full">
                 {file.name}
               </p>
               <audio controls autoPlay src={url} className="w-full">
@@ -105,16 +105,16 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
             <iframe
               src={url}
               title={file.name}
-              className="w-full h-[65vh] rounded-lg border border-slate-200"
+              className="w-full h-[65vh] rounded-lg border border-slate-200 dark:border-slate-700"
             />
           )}
 
           {!isPhoto && !isVideo && !isAudio && !isPdf && (
             <div className="text-center py-12 px-6">
-              <p className="text-sm font-semibold text-slate-800">
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                 Browser preview is not available for this document type
               </p>
-              <p className="text-xs text-slate-500 mt-1 mb-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
                 You can download the file or open it directly in a new window.
               </p>
               <a

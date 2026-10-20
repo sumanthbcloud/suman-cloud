@@ -90,7 +90,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     <div className="space-y-6">
       {/* Toast Feedback */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-lg bg-slate-900 text-white text-xs shadow-lg flex items-center gap-2 animate-in fade-in">
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-lg bg-slate-900 dark:bg-slate-800 text-white text-xs shadow-lg border border-slate-800 dark:border-slate-700 flex items-center gap-2 animate-in fade-in">
           <span>{toastMessage}</span>
           <button
             type="button"
@@ -105,35 +105,35 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       {/* Header Area */}
       {isHome ? (
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Welcome back, {user?.name || 'Suman'}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Your files, securely backed up and organized in Amazon S3.
           </p>
         </div>
       ) : (
         <div className="flex items-center justify-between pb-1">
           <div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+            <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 mb-1">
               <button
                 type="button"
                 onClick={() => onSelectCategory('all')}
-                className="hover:text-slate-700 transition-colors cursor-pointer"
+                className="hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
               >
                 All files
               </button>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-              <span className="text-slate-600 font-medium capitalize">
+              <ChevronRight className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
+              <span className="text-slate-600 dark:text-slate-300 font-medium capitalize">
                 {categoryMeta?.label || currentCategory}
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 capitalize">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white capitalize">
               {categoryMeta?.label || currentCategory}
             </h1>
           </div>
           {categoryMeta && (
-            <span className="text-xs text-slate-500 font-medium">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               {categoryMeta.count.toLocaleString()} files
             </span>
           )}
@@ -152,7 +152,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       {/* Recent Files Section */}
       <section className="space-y-3">
         {isHome && (
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Recent files
           </h2>
         )}

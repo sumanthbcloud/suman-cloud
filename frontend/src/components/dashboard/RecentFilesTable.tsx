@@ -32,10 +32,10 @@ const CATEGORY_STYLE_MAP: Record<
   CloudFile['category'],
   { iconBg: string; iconColor: string }
 > = {
-  photos: { iconBg: 'bg-rose-50', iconColor: 'text-rose-600' },
-  videos: { iconBg: 'bg-amber-50', iconColor: 'text-amber-600' },
-  audio: { iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
-  documents: { iconBg: 'bg-blue-50', iconColor: 'text-blue-600' },
+  photos: { iconBg: 'bg-rose-50 dark:bg-rose-950/50', iconColor: 'text-rose-600 dark:text-rose-400' },
+  videos: { iconBg: 'bg-amber-50 dark:bg-amber-950/50', iconColor: 'text-amber-600 dark:text-amber-400' },
+  audio: { iconBg: 'bg-emerald-50 dark:bg-emerald-950/50', iconColor: 'text-emerald-600 dark:text-emerald-400' },
+  documents: { iconBg: 'bg-blue-50 dark:bg-blue-950/50', iconColor: 'text-blue-600 dark:text-blue-400' },
 };
 
 export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
@@ -55,10 +55,10 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
 
   if (filteredFiles.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 py-12 px-4 text-center">
-        <FileQuestion className="w-8 h-8 text-slate-300 mx-auto mb-2.5" />
-        <h4 className="text-xs font-semibold text-slate-800">No files found</h4>
-        <p className="text-xs text-slate-400 mt-1">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 py-12 px-4 text-center">
+        <FileQuestion className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2.5" />
+        <h4 className="text-xs font-semibold text-slate-800 dark:text-slate-200">No files found</h4>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
           {searchQuery ? `No files matching "${searchQuery}"` : 'Upload your first file to get started'}
         </p>
       </div>
@@ -72,14 +72,14 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
         {filteredFiles.map((file) => (
           <div
             key={file.id}
-            className="group bg-white rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-xs transition-all overflow-hidden flex flex-col"
+            className="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs transition-all overflow-hidden flex flex-col"
           >
             {/* Thumbnail Placeholder */}
             <div
               onClick={() => onFileAction(file, 'preview')}
-              className="h-32 bg-slate-100 flex items-center justify-center relative group-hover:bg-slate-200/60 transition-colors cursor-pointer"
+              className="h-32 bg-slate-100 dark:bg-slate-800 flex items-center justify-center relative group-hover:bg-slate-200/60 dark:group-hover:bg-slate-700/60 transition-colors cursor-pointer"
             >
-              <Image className="w-8 h-8 text-slate-300 group-hover:text-rose-500 transition-colors" />
+              <Image className="w-8 h-8 text-slate-300 dark:text-slate-600 group-hover:text-rose-500 transition-colors" />
               {file.starred && (
                 <Star className="w-4 h-4 text-amber-400 fill-amber-400 absolute top-2 right-2" />
               )}
@@ -87,10 +87,10 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
             {/* Meta */}
             <div className="p-3 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-800 truncate" title={file.name}>
+                <p className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate" title={file.name}>
                   {file.name}
                 </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                   {formatBytes(file.size)}
                 </p>
               </div>
@@ -98,7 +98,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
                 <button
                   type="button"
                   onClick={() => onFileAction(file, 'preview')}
-                  className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                   title="Preview"
                 >
                   <Eye className="w-3.5 h-3.5" />
@@ -106,7 +106,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
                 <button
                   type="button"
                   onClick={() => onFileAction(file, 'download')}
-                  className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                   title="Download"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -114,7 +114,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
                 <button
                   type="button"
                   onClick={() => onFileAction(file, 'delete')}
-                  className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                  className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                   title="Delete"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -134,24 +134,24 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
         {filteredFiles.map((file) => (
           <div
             key={file.id}
-            className="group bg-white rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-xs transition-all overflow-hidden flex flex-col"
+            className="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs transition-all overflow-hidden flex flex-col"
           >
             {/* Video Thumbnail Placeholder */}
             <div
               onClick={() => onFileAction(file, 'preview')}
-              className="h-32 bg-slate-100 flex items-center justify-center relative group-hover:bg-slate-200/60 transition-colors cursor-pointer"
+              className="h-32 bg-slate-100 dark:bg-slate-800 flex items-center justify-center relative group-hover:bg-slate-200/60 dark:group-hover:bg-slate-700/60 transition-colors cursor-pointer"
             >
-              <div className="w-9 h-9 rounded-full bg-white shadow-xs flex items-center justify-center text-slate-600 group-hover:text-blue-600 transition-colors">
+              <div className="w-9 h-9 rounded-full bg-white dark:bg-slate-800 shadow-xs border border-slate-200/60 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 <Play className="w-4 h-4 fill-current ml-0.5" />
               </div>
             </div>
             {/* Meta */}
             <div className="p-3 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-800 truncate" title={file.name}>
+                <p className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate" title={file.name}>
                   {file.name}
                 </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                   {formatBytes(file.size)} • {file.updatedAt}
                 </p>
               </div>
@@ -159,7 +159,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
                 <button
                   type="button"
                   onClick={() => onFileAction(file, 'preview')}
-                  className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                   title="Preview"
                 >
                   <Eye className="w-3.5 h-3.5" />
@@ -167,7 +167,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
                 <button
                   type="button"
                   onClick={() => onFileAction(file, 'download')}
-                  className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                   title="Download"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -175,7 +175,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
                 <button
                   type="button"
                   onClick={() => onFileAction(file, 'delete')}
-                  className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                  className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                   title="Delete"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -190,11 +190,11 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
 
   // Standard clean list view (Home & Documents / Audio)
   return (
-    <div className="bg-white rounded-xl border border-slate-200/90 overflow-hidden shadow-2xs">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-2xs">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-slate-200/80 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50/70">
+            <tr className="border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-50/70 dark:bg-slate-850/60">
               <th className="py-2.5 pl-4 pr-3">Name</th>
               <th className="py-2.5 px-3 hidden sm:table-cell">Category</th>
               <th className="py-2.5 px-3 hidden md:table-cell">Size</th>
@@ -202,7 +202,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
               <th className="py-2.5 pl-3 pr-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-xs">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
             {filteredFiles.map((file) => {
               const Icon = CATEGORY_ICON_MAP[file.category] || FileText;
               const style = CATEGORY_STYLE_MAP[file.category];
@@ -210,7 +210,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
               return (
                 <tr
                   key={file.id}
-                  className="hover:bg-slate-50/80 transition-colors group"
+                  className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group"
                 >
                   {/* File Name & Icon */}
                   <td className="py-2.5 pl-4 pr-3">
@@ -224,7 +224,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
                         <div className="flex items-center gap-1.5">
                           <p
                             onClick={() => onFileAction(file, 'preview')}
-                            className="font-medium text-slate-800 truncate group-hover:text-blue-600 transition-colors cursor-pointer"
+                            className="font-medium text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer"
                           >
                             {file.name}
                           </p>
@@ -232,7 +232,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
                             <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
                           )}
                         </div>
-                        <p className="text-[11px] text-slate-400 truncate sm:hidden">
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate sm:hidden">
                           {formatBytes(file.size)} • {file.updatedAt}
                         </p>
                       </div>
@@ -241,18 +241,18 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
 
                   {/* Category */}
                   <td className="py-2.5 px-3 hidden sm:table-cell">
-                    <span className="inline-block text-[11px] font-medium text-slate-600 capitalize">
+                    <span className="inline-block text-[11px] font-medium text-slate-600 dark:text-slate-400 capitalize">
                       {file.category}
                     </span>
                   </td>
 
                   {/* Size */}
-                  <td className="py-2.5 px-3 hidden md:table-cell text-slate-500 font-normal">
+                  <td className="py-2.5 px-3 hidden md:table-cell text-slate-500 dark:text-slate-400 font-normal">
                     {formatBytes(file.size)}
                   </td>
 
                   {/* Upload Date */}
-                  <td className="py-2.5 px-3 hidden lg:table-cell text-slate-400">
+                  <td className="py-2.5 px-3 hidden lg:table-cell text-slate-400 dark:text-slate-500">
                     {file.updatedAt}
                   </td>
 
@@ -263,7 +263,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
                         type="button"
                         onClick={() => onFileAction(file, 'preview')}
                         title="Preview"
-                        className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                        className="p-1 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </button>
@@ -271,7 +271,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
                         type="button"
                         onClick={() => onFileAction(file, 'download')}
                         title="Download"
-                        className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                        className="p-1 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
                       </button>
@@ -279,7 +279,7 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
                         type="button"
                         onClick={() => onFileAction(file, 'delete')}
                         title="Delete file"
-                        className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        className="p-1 rounded-md text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
