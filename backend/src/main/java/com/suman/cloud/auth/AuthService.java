@@ -6,11 +6,16 @@ import com.suman.cloud.auth.dto.SignupRequest;
 import com.suman.cloud.security.JwtService;
 import com.suman.cloud.user.User;
 import com.suman.cloud.user.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -44,7 +49,24 @@ public class AuthService {
 
         String hashedPassword = passwordEncoder.encode(request.password());
         User user = new User(username, email, hashedPassword);
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+        } catch (DataIntegrityViolationException ex) {
+            logger.error("Data integrity violation during signup for username '{}', email '{}': {}", username, email, ex.getMessage(), ex);
+            String details = (ex.getMessage() != null ? ex.getMessage() : "") + " "
+                    + (ex.getRootCause() != null && ex.getRootCause().getMessage() != null ? ex.getRootCause().getMessage() : "");
+            String lower = details.toLowerCase();
+            boolean isUnique = lower.contains("unique") || lower.contains("duplicate") || lower.contains("already exists");
+            if (isUnique && (lower.contains("username") || lower.contains("users_username"))) {
+                throw new IllegalArgumentException("Username already exists");
+            } else if (isUnique && (lower.contains("users_email") || (lower.contains("email") && !lower.contains("email_verified")))) {
+                throw new IllegalArgumentException("Email already exists");
+            }
+            throw new IllegalStateException("Unable to create account. Please try again.");
+        } catch (Exception ex) {
+            logger.error("Unexpected error saving user '{}', email '{}': {}", username, email, ex.getMessage(), ex);
+            throw new IllegalStateException("Unable to create account. Please try again.");
+        }
 
         return AuthResponse.message("User registered successfully");
     }

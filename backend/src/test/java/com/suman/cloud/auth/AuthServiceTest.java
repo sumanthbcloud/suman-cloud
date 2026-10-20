@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -184,5 +185,61 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.login(missingPassword))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Required fields missing");
+    }
+
+    @Test
+    @DisplayName("Signup should translate DB unique username constraint violation to clean error")
+    void shouldTranslateDataIntegrityViolationOnUsernameToCleanError() {
+        SignupRequest request = new SignupRequest("sumankumar", "user@example.com", "pass123");
+        when(userRepository.existsByUsernameIgnoreCase("sumankumar")).thenReturn(false);
+        when(userRepository.existsByEmail("user@example.com")).thenReturn(false);
+        when(userRepository.save(any(User.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key value violates unique constraint users_username_key"));
+
+        assertThatThrownBy(() -> authService.signup(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Username already exists");
+    }
+
+    @Test
+    @DisplayName("Signup should translate DB unique email constraint violation to clean error")
+    void shouldTranslateDataIntegrityViolationOnEmailToCleanError() {
+        SignupRequest request = new SignupRequest("sumankumar", "user@example.com", "pass123");
+        when(userRepository.existsByUsernameIgnoreCase("sumankumar")).thenReturn(false);
+        when(userRepository.existsByEmail("user@example.com")).thenReturn(false);
+        when(userRepository.save(any(User.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key value violates unique constraint users_email_key"));
+
+        assertThatThrownBy(() -> authService.signup(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Email already exists");
+    }
+
+    @Test
+    @DisplayName("Signup should translate legacy column or not-null constraint violation to user-safe message")
+    void shouldTranslateDataIntegrityViolationOnLegacyColumnToCleanError() {
+        SignupRequest request = new SignupRequest("sumankumar", "user@example.com", "pass123");
+        when(userRepository.existsByUsernameIgnoreCase("sumankumar")).thenReturn(false);
+        when(userRepository.existsByEmail("user@example.com")).thenReturn(false);
+        when(userRepository.save(any(User.class)))
+                .thenThrow(new DataIntegrityViolationException("null value in column \"email_verified\" of relation \"users\" violates not-null constraint"));
+
+        assertThatThrownBy(() -> authService.signup(request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Unable to create account. Please try again.");
+    }
+
+    @Test
+    @DisplayName("Signup should translate unexpected database exceptions to user-safe message")
+    void shouldTranslateUnexpectedDatabaseExceptionToCleanError() {
+        SignupRequest request = new SignupRequest("sumankumar", "user@example.com", "pass123");
+        when(userRepository.existsByUsernameIgnoreCase("sumankumar")).thenReturn(false);
+        when(userRepository.existsByEmail("user@example.com")).thenReturn(false);
+        when(userRepository.save(any(User.class)))
+                .thenThrow(new RuntimeException("Database connection timeout"));
+
+        assertThatThrownBy(() -> authService.signup(request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Unable to create account. Please try again.");
     }
 }

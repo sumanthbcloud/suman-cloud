@@ -35,7 +35,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : '';
       const isClean = raw && !raw.includes('HTTP') && !raw.includes('status') && !raw.includes('Exception');
-      setError(isClean ? raw : 'Registration failed. Please try again.');
+      setError(isClean ? raw : 'Unable to create account. Please try again.');
     } finally {
       setLoading(false);
     }

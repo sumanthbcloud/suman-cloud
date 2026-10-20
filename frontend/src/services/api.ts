@@ -45,9 +45,15 @@ function sanitizeErrorMessage(msg: string): string {
     lower.includes('database') ||
     lower.includes('bucket') ||
     lower.includes('presign') ||
-    lower.includes('objectkey')
+    lower.includes('objectkey') ||
+    lower.includes('hibernate') ||
+    lower.includes('constraint') ||
+    lower.includes('relation') ||
+    lower.includes('column') ||
+    lower.includes('postgres') ||
+    lower.includes('syntax')
   ) {
-    return 'Something went wrong. Please try again.';
+    return 'Unable to process request. Please try again.';
   }
   return msg;
 }
