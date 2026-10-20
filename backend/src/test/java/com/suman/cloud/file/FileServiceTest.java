@@ -142,7 +142,7 @@ class FileServiceTest {
         when(fileRecordRepository.findByIdAndUserId(12L, 1L)).thenReturn(Optional.of(record));
 
         PresignedGetObjectRequest presignedRequest = mock(PresignedGetObjectRequest.class);
-        when(presignedRequest.url()).thenReturn(new URI("https://test-bucket.s3.us-east-1.amazonaws.com/users/1/report-2026.pdf?response-content-disposition=attachment").toURL());
+        when(presignedRequest.url()).thenReturn(new URI("https://test-bucket.s3.us-east-1.amazonaws.com/users/1/report-2026.pdf").toURL());
         when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presignedRequest);
 
         var response = fileService.getDownloadUrl(1L, 12L);
@@ -155,30 +155,74 @@ class FileServiceTest {
 
         assertThat(presignRequestValue.signatureDuration()).isEqualTo(java.time.Duration.ofHours(1));
         assertThat(presignRequestValue.getObjectRequest().responseContentDisposition())
-                .isEqualTo("attachment; filename=\"report-2026.pdf\"");
+                .isEqualTo("attachment; filename=\"report-2026.pdf\"; filename*=UTF-8''report-2026.pdf");
         assertThat(presignRequestValue.getObjectRequest().key()).isEqualTo("users/1/report-2026.pdf");
+        assertAsciiOnly(presignRequestValue.getObjectRequest().responseContentDisposition());
     }
 
     @Test
-    @DisplayName("Should handle filenames with spaces and quotes safely in Content-Disposition")
-    void shouldHandleFilenamesWithSpacesAndQuotesInDownloadUrl() throws Exception {
-        FileRecord record = new FileRecord(1L, "My Vacation \"Photo\" 2026.png", "PHOTO", "image/png", 4096L, "users/1/vacation.png");
-        record.setId(15L);
+    @DisplayName("Content-Disposition: Normal ASCII filename")
+    void shouldBuildContentDispositionForNormalAsciiFilename() {
+        String header = FileService.buildContentDisposition("report.pdf");
+        assertThat(header).isEqualTo("attachment; filename=\"report.pdf\"; filename*=UTF-8''report.pdf");
+        assertAsciiOnly(header);
+    }
 
-        when(fileRecordRepository.findByIdAndUserId(15L, 1L)).thenReturn(Optional.of(record));
+    @Test
+    @DisplayName("Content-Disposition: Filename with spaces")
+    void shouldBuildContentDispositionForFilenameWithSpaces() {
+        String header = FileService.buildContentDisposition("My Vacation Photo 2026.png");
+        assertThat(header).isEqualTo("attachment; filename=\"My Vacation Photo 2026.png\"; filename*=UTF-8''My%20Vacation%20Photo%202026.png");
+        assertAsciiOnly(header);
+    }
 
-        PresignedGetObjectRequest presignedRequest = mock(PresignedGetObjectRequest.class);
-        when(presignedRequest.url()).thenReturn(new URI("https://test-bucket.s3.us-east-1.amazonaws.com/users/1/vacation.png").toURL());
-        when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presignedRequest);
+    @Test
+    @DisplayName("Content-Disposition: Filename with quotes and backslashes")
+    void shouldBuildContentDispositionForFilenameWithQuotes() {
+        String header = FileService.buildContentDisposition("My \"Vacation\" Photo.png");
+        assertThat(header).isEqualTo("attachment; filename=\"My \\\"Vacation\\\" Photo.png\"; filename*=UTF-8''My%20%22Vacation%22%20Photo.png");
+        assertAsciiOnly(header);
+    }
 
-        var response = fileService.getDownloadUrl(1L, 15L);
-        assertThat(response.get("url")).isNotEmpty();
+    @Test
+    @DisplayName("Content-Disposition: Narrow no-break space U+202F (macOS screenshot filename)")
+    void shouldBuildContentDispositionForNarrowNoBreakSpace() {
+        String original = "Screenshot 2026-09-22 at 3.33.54\u202FPM.png";
+        String header = FileService.buildContentDisposition(original);
+        assertThat(header).isEqualTo(
+                "attachment; filename=\"Screenshot 2026-09-22 at 3.33.54_PM.png\"; filename*=UTF-8''Screenshot%202026-09-22%20at%203.33.54%E2%80%AFPM.png"
+        );
+        assertAsciiOnly(header);
+    }
 
-        ArgumentCaptor<GetObjectPresignRequest> captor = ArgumentCaptor.forClass(GetObjectPresignRequest.class);
-        verify(s3Presigner).presignGetObject(captor.capture());
+    @Test
+    @DisplayName("Content-Disposition: General Unicode filename")
+    void shouldBuildContentDispositionForGeneralUnicode() {
+        String original = "résumé 2026.pdf";
+        String header = FileService.buildContentDisposition(original);
+        assertThat(header).isEqualTo(
+                "attachment; filename=\"r_sum_ 2026.pdf\"; filename*=UTF-8''r%C3%A9sum%C3%A9%202026.pdf"
+        );
+        assertAsciiOnly(header);
+    }
 
-        assertThat(captor.getValue().getObjectRequest().responseContentDisposition())
-                .isEqualTo("attachment; filename=\"My Vacation \\\"Photo\\\" 2026.png\"");
+    @Test
+    @DisplayName("Content-Disposition: Strips CR and LF to prevent header injection")
+    void shouldStripCrAndLfToPreventHeaderInjection() {
+        String malicious = "report\r\nSet-Cookie: evil\n.pdf";
+        String header = FileService.buildContentDisposition(malicious);
+        assertThat(header).doesNotContain("\r");
+        assertThat(header).doesNotContain("\n");
+        assertAsciiOnly(header);
+    }
+
+    private void assertAsciiOnly(String header) {
+        assertThat(header).isNotNull();
+        for (char c : header.toCharArray()) {
+            assertThat((int) c)
+                    .withFailMessage("Header contains non-ASCII character: " + c + " (code " + (int) c + ")")
+                    .isLessThanOrEqualTo(127);
+        }
     }
 
     @Test

@@ -17,6 +17,8 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -93,14 +95,47 @@ public class FileService {
         FileRecord record = fileRecordRepository.findByIdAndUserId(fileId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("File not found or unauthorized"));
 
-        String rawFilename = record.getFilename();
-        if (rawFilename == null || rawFilename.isBlank()) {
-            rawFilename = "download";
-        }
-        String safeFilename = rawFilename.replace("\r", "").replace("\n", "").replace("\"", "\\\"");
-        String disposition = "attachment; filename=\"" + safeFilename + "\"";
+        String disposition = buildContentDisposition(record.getFilename());
         String downloadUrl = generatePresignedGetUrl(record.getObjectKey(), disposition);
         return Map.of("url", downloadUrl);
+    }
+
+    static String buildContentDisposition(String rawFilename) {
+        if (rawFilename == null || rawFilename.isBlank()) {
+            return "attachment; filename=\"download\"";
+        }
+
+        // 1. Strip CR and LF to prevent HTTP header injection
+        String sanitized = rawFilename.replace("\r", "").replace("\n", "").trim();
+        if (sanitized.isEmpty()) {
+            return "attachment; filename=\"download\"";
+        }
+
+        // 2. Build ASCII-safe fallback filename
+        StringBuilder asciiBuilder = new StringBuilder();
+        for (char c : sanitized.toCharArray()) {
+            if (c >= 32 && c <= 126) {
+                if (c == '"' || c == '\\') {
+                    asciiBuilder.append('\\').append(c);
+                } else {
+                    asciiBuilder.append(c);
+                }
+            } else {
+                asciiBuilder.append('_');
+            }
+        }
+        String asciiFallback = asciiBuilder.toString().trim();
+        if (asciiFallback.isEmpty()) {
+            asciiFallback = "download";
+        }
+
+        // 3. Build RFC 5987 percent-encoded UTF-8 filename*
+        String rfc5987Encoded = URLEncoder.encode(sanitized, StandardCharsets.UTF_8)
+                .replace("+", "%20")
+                .replace("*", "%2A")
+                .replace("%7E", "~");
+
+        return "attachment; filename=\"" + asciiFallback + "\"; filename*=UTF-8''" + rfc5987Encoded;
     }
 
     public Map<String, String> deleteFile(Long userId, Long fileId) {
