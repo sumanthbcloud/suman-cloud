@@ -50,9 +50,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       setSelectedFile(null);
       onUploadSuccess();
       onClose();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to upload file';
-      setError(msg);
+    } catch {
+      setError('Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -67,11 +66,11 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 dark:bg-black/70 backdrop-blur-xs transition-opacity duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 dark:bg-black/80 backdrop-blur-xs transition-opacity duration-200"
       onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-xl text-left transition-colors"
+        className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-[#111318] border border-slate-200 dark:border-white/[0.08] p-6 shadow-2xl text-left transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         <input
@@ -82,10 +81,10 @@ export const UploadModal: React.FC<UploadModalProps> = ({
         />
 
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-white/[0.08]">
           <div>
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">Upload file</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-zinc-100">Upload file</h3>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
               Add photos, videos, audio, and documents to your storage
             </p>
           </div>
@@ -93,7 +92,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             type="button"
             onClick={handleClose}
             disabled={uploading}
-            className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors disabled:opacity-50 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -111,30 +110,30 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onClick={() => fileInputRef.current?.click()}
-          className="mt-5 border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/60 dark:bg-slate-800/40 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all cursor-pointer group"
+          className="mt-5 border-2 border-dashed border-slate-200 dark:border-white/[0.12] hover:border-blue-500 dark:hover:border-blue-400 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/60 dark:bg-[#14151a] hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all cursor-pointer group"
         >
           {selectedFile ? (
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-3">
                 <CheckCircle className="w-6 h-6 stroke-[2]" />
               </div>
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 break-all max-w-sm">
+              <p className="text-sm font-semibold text-slate-800 dark:text-zinc-200 break-all max-w-sm">
                 {selectedFile.name}
               </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+              <p className="text-xs text-slate-400 dark:text-zinc-500 mt-1">
                 {formatBytes(selectedFile.size)} • Click to choose a different file
               </p>
             </div>
           ) : (
             <>
-              <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-800 shadow-xs border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:border-blue-200 dark:group-hover:border-blue-800 transition-colors mb-3">
+              <div className="w-12 h-12 rounded-full bg-white dark:bg-[#181920] shadow-xs border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-500 dark:text-zinc-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:border-blue-200 dark:group-hover:border-blue-800 transition-colors mb-3">
                 <Upload className="w-6 h-6 stroke-[1.8]" />
               </div>
-              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              <p className="text-sm font-medium text-slate-700 dark:text-zinc-300">
                 Drag and drop a file here, or{' '}
                 <span className="text-blue-600 dark:text-blue-400 hover:underline">browse</span>
               </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+              <p className="text-xs text-slate-400 dark:text-zinc-500 mt-1">
                 Supports photos, videos, audio, and documents (up to 100MB)
               </p>
             </>
@@ -142,8 +141,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-          <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+        <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-100 dark:border-white/[0.08]">
+          <span className="text-xs text-slate-400 dark:text-zinc-500 flex items-center gap-1.5">
             <FileUp className="w-3.5 h-3.5" />
             {uploading ? 'Uploading...' : selectedFile ? 'Ready to upload' : 'Choose file'}
           </span>
@@ -152,7 +151,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               type="button"
               onClick={handleClose}
               disabled={uploading}
-              className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+              className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
             >
               Cancel
             </button>
@@ -160,7 +159,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               type="button"
               onClick={selectedFile ? handleUpload : () => fileInputRef.current?.click()}
               disabled={uploading}
-              className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800/60 rounded-lg transition-colors shadow-xs cursor-pointer"
+              className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800/60 rounded-xl transition-colors shadow-xs cursor-pointer"
             >
               {uploading ? 'Uploading...' : selectedFile ? 'Upload now' : 'Browse files'}
             </button>

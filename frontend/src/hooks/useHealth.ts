@@ -15,7 +15,7 @@ export function useHealth() {
       setHealth(res);
       return res;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Backend unreachable');
+      setError('Service unavailable. Please try again.');
       setHealth({ status: 'DOWN' });
       return { status: 'DOWN' as const };
     } finally {

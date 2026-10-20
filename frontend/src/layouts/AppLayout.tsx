@@ -36,7 +36,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex transition-colors duration-200">
+    <div className="min-h-screen bg-[#F4FAFF] dark:bg-[#09090b] text-slate-900 dark:text-zinc-100 flex transition-colors duration-200">
       {/* Sidebar navigation */}
       <Sidebar
         currentCategory={currentCategory}

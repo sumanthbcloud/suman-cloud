@@ -28,7 +28,7 @@ export const SumanLogo: React.FC<SumanLogoProps> = ({ size = 'md', className = '
         </svg>
       </div>
 
-      <span className={`font-bold tracking-tight text-slate-900 dark:text-white ${sizeClasses.text}`}>
+      <span className={`font-bold tracking-tight text-slate-900 dark:text-zinc-100 ${sizeClasses.text}`}>
         SUMAN CLOUD
       </span>
     </div>

@@ -35,6 +35,23 @@ export function setStoredUser(user: { name: string; email: string }): void {
   localStorage.setItem('suman_user', JSON.stringify(user));
 }
 
+function sanitizeErrorMessage(msg: string): string {
+  if (!msg) return 'Something went wrong. Please try again.';
+  const lower = msg.toLowerCase();
+  if (
+    lower.includes('s3') ||
+    lower.includes('aws') ||
+    lower.includes('sql') ||
+    lower.includes('database') ||
+    lower.includes('bucket') ||
+    lower.includes('presign') ||
+    lower.includes('objectkey')
+  ) {
+    return 'Something went wrong. Please try again.';
+  }
+  return msg;
+}
+
 export async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
   const token = getAuthToken();
@@ -51,11 +68,11 @@ export async function fetchJson<T>(endpoint: string, options?: RequestInit): Pro
   });
 
   if (!response.ok) {
-    let errorMsg = `HTTP error ${response.status}`;
+    let errorMsg = 'Something went wrong. Please try again.';
     try {
       const err = await response.json();
-      if (err.message) errorMsg = err.message;
-      else if (err.error) errorMsg = err.error;
+      if (err.message) errorMsg = sanitizeErrorMessage(err.message);
+      else if (err.error) errorMsg = sanitizeErrorMessage(err.error);
     } catch {
       // not JSON response
     }
@@ -83,10 +100,10 @@ export async function uploadFileApi<T>(endpoint: string, formData: FormData): Pr
   });
 
   if (!response.ok) {
-    let errorMsg = `Upload failed (${response.status})`;
+    let errorMsg = 'Upload failed. Please try again.';
     try {
       const err = await response.json();
-      if (err.message) errorMsg = err.message;
+      if (err.message) errorMsg = sanitizeErrorMessage(err.message);
     } catch {
       // not JSON response
     }
