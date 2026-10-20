@@ -41,10 +41,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const handleFileAction = async (
     file: CloudFile,
-    action: 'preview' | 'download' | 'delete'
+    action: 'preview' | 'download' | 'delete',
+    preloadedUrl?: string
   ) => {
     if (action === 'delete') {
-      const confirmed = window.confirm(`Delete "${file.name}"? This will delete the file from Amazon S3.`);
+      const confirmed = window.confirm(`Delete "${file.name}"? This will delete the file from storage.`);
       if (!confirmed) return;
       try {
         await fileService.deleteFile(file.id);
@@ -58,8 +59,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     }
 
     try {
-      showToast(`Generating secure S3 access link...`);
-      const url = await fileService.getPresignedUrl(file.id);
+      let url = preloadedUrl;
+      if (!url) {
+        showToast(`Generating secure access link...`);
+        url = await fileService.getPresignedUrl(file.id);
+      }
 
       if (action === 'download') {
         const link = document.createElement('a');
@@ -76,7 +80,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         setPreviewOpen(true);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error accessing S3 object';
+      const msg = err instanceof Error ? err.message : 'Error accessing file';
       showToast(msg);
     }
   };
@@ -109,7 +113,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             Welcome back, {user?.name || 'Suman'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Your files, securely backed up and organized in Amazon S3.
+            Your files, securely backed up and organized in your storage.
           </p>
         </div>
       ) : (

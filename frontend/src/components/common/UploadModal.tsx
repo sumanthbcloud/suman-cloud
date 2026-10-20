@@ -86,7 +86,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           <div>
             <h3 className="text-base font-semibold text-slate-900 dark:text-white">Upload file</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Add photos, videos, audio, and documents to your personal S3 storage
+              Add photos, videos, audio, and documents to your storage
             </p>
           </div>
           <button
@@ -145,7 +145,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
         <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
           <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
             <FileUp className="w-3.5 h-3.5" />
-            {uploading ? 'Uploading to S3...' : selectedFile ? 'Ready to upload' : 'Choose file'}
+            {uploading ? 'Uploading...' : selectedFile ? 'Ready to upload' : 'Choose file'}
           </span>
           <div className="flex items-center gap-2">
             <button

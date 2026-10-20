@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Image,
   Video,
@@ -12,13 +12,18 @@ import {
   FileQuestion,
 } from 'lucide-react';
 import { formatBytes } from '../common/StorageProgressBar';
+import { fileService } from '../../services/fileService';
 import type { CloudFile, FileCategory } from '../../types';
 
 interface RecentFilesTableProps {
   files: CloudFile[];
   selectedCategory: FileCategory;
   searchQuery: string;
-  onFileAction: (file: CloudFile, action: 'preview' | 'download' | 'delete') => void;
+  onFileAction: (
+    file: CloudFile,
+    action: 'preview' | 'download' | 'delete',
+    preloadedUrl?: string
+  ) => void;
 }
 
 const CATEGORY_ICON_MAP: Record<CloudFile['category'], React.ComponentType<{ className?: string }>> = {
@@ -36,6 +41,181 @@ const CATEGORY_STYLE_MAP: Record<
   videos: { iconBg: 'bg-amber-50 dark:bg-amber-950/50', iconColor: 'text-amber-600 dark:text-amber-400' },
   audio: { iconBg: 'bg-emerald-50 dark:bg-emerald-950/50', iconColor: 'text-emerald-600 dark:text-emerald-400' },
   documents: { iconBg: 'bg-blue-50 dark:bg-blue-950/50', iconColor: 'text-blue-600 dark:text-blue-400' },
+};
+
+/**
+ * Visual thumbnail tile for the Photos gallery grid.
+ * Fetches presigned URL, shows skeleton while loading, renders lazy image with object-cover,
+ * and displays subtle hover actions and metadata.
+ */
+const PhotoThumbnailTile: React.FC<{
+  file: CloudFile;
+  onFileAction: (
+    file: CloudFile,
+    action: 'preview' | 'download' | 'delete',
+    preloadedUrl?: string
+  ) => void;
+}> = ({ file, onFileAction }) => {
+  const [url, setUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [imgLoaded, setImgLoaded] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
+
+  useEffect(() => {
+    let active = true;
+    fileService
+      .getPresignedUrl(file.id)
+      .then((presignedUrl) => {
+        if (active) {
+          setUrl(presignedUrl);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setError(true);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [file.id]);
+
+  return (
+    <div
+      onClick={() => onFileAction(file, 'preview', url || undefined)}
+      className="group relative aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md transition-all duration-200 cursor-pointer select-none"
+    >
+      {/* Loading Skeleton */}
+      {(loading || (!imgLoaded && !error)) && (
+        <div className="absolute inset-0 bg-slate-200/70 dark:bg-slate-800 animate-pulse flex items-center justify-center">
+          <Image className="w-7 h-7 text-slate-300 dark:text-slate-600" />
+        </div>
+      )}
+
+      {/* Error Fallback */}
+      {error && (
+        <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 flex flex-col items-center justify-center p-3 text-center">
+          <Image className="w-8 h-8 text-slate-300 dark:text-slate-600 mb-1.5" />
+          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate w-full">
+            {file.name}
+          </p>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+            Preview unavailable
+          </span>
+        </div>
+      )}
+
+      {/* Actual Thumbnail Image */}
+      {url && !error && (
+        <img
+          src={url}
+          alt={file.name}
+          loading="lazy"
+          onLoad={() => setImgLoaded(true)}
+          onError={() => setError(true)}
+          className={`w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105 ${
+            imgLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      )}
+
+      {/* Star indicator if starred */}
+      {file.starred && (
+        <Star className="w-4 h-4 text-amber-400 fill-amber-400 absolute top-2.5 left-2.5 drop-shadow-xs z-10" />
+      )}
+
+      {/* Subtle Hover Overlay with Title and Actions */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-between p-2.5 z-10">
+        {/* Top bar quick actions */}
+        <div className="flex items-center justify-end gap-1.5 self-end">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onFileAction(file, 'download', url || undefined);
+            }}
+            className="p-1.5 rounded-lg bg-black/40 hover:bg-black/70 text-white backdrop-blur-xs transition-colors cursor-pointer"
+            title="Download image"
+            aria-label="Download image"
+          >
+            <Download className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onFileAction(file, 'delete');
+            }}
+            className="p-1.5 rounded-lg bg-black/40 hover:bg-rose-600 text-white backdrop-blur-xs transition-colors cursor-pointer"
+            title="Delete image"
+            aria-label="Delete image"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Bottom file info */}
+        <div className="min-w-0 pr-1">
+          <p className="text-xs font-medium text-white truncate drop-shadow-xs" title={file.name}>
+            {file.name}
+          </p>
+          <p className="text-[10px] text-slate-300 drop-shadow-xs mt-0.5">
+            {formatBytes(file.size)}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Small row thumbnail for Photos in the list view (Home page).
+ */
+const RowThumbnail: React.FC<{
+  file: CloudFile;
+  fallbackStyle: { iconBg: string; iconColor: string };
+  Icon: React.ComponentType<{ className?: string }>;
+}> = ({ file, fallbackStyle, Icon }) => {
+  const [thumbUrl, setThumbUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (file.category === 'photos') {
+      fileService
+        .getPresignedUrl(file.id)
+        .then((url) => {
+          if (active) setThumbUrl(url);
+        })
+        .catch(() => {});
+    }
+    return () => {
+      active = false;
+    };
+  }, [file.id, file.category]);
+
+  if (file.category === 'photos' && thumbUrl) {
+    return (
+      <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
+        <img
+          src={thumbUrl}
+          alt=""
+          loading="lazy"
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${fallbackStyle.iconBg} ${fallbackStyle.iconColor}`}
+    >
+      <Icon className="w-4 h-4 stroke-[1.8]" />
+    </div>
+  );
 };
 
 export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
@@ -65,63 +245,16 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
     );
   }
 
-  // Category view: Photos grid
+  // Category view: Photos gallery grid
   if (selectedCategory === 'photos') {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4.5">
         {filteredFiles.map((file) => (
-          <div
+          <PhotoThumbnailTile
             key={file.id}
-            className="group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs transition-all overflow-hidden flex flex-col"
-          >
-            {/* Thumbnail Placeholder */}
-            <div
-              onClick={() => onFileAction(file, 'preview')}
-              className="h-32 bg-slate-100 dark:bg-slate-800 flex items-center justify-center relative group-hover:bg-slate-200/60 dark:group-hover:bg-slate-700/60 transition-colors cursor-pointer"
-            >
-              <Image className="w-8 h-8 text-slate-300 dark:text-slate-600 group-hover:text-rose-500 transition-colors" />
-              {file.starred && (
-                <Star className="w-4 h-4 text-amber-400 fill-amber-400 absolute top-2 right-2" />
-              )}
-            </div>
-            {/* Meta */}
-            <div className="p-3 flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate" title={file.name}>
-                  {file.name}
-                </p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                  {formatBytes(file.size)}
-                </p>
-              </div>
-              <div className="flex items-center shrink-0 gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => onFileAction(file, 'preview')}
-                  className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                  title="Preview"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onFileAction(file, 'download')}
-                  className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                  title="Download"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onFileAction(file, 'delete')}
-                  className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                  title="Delete"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
+            file={file}
+            onFileAction={onFileAction}
+          />
         ))}
       </div>
     );
@@ -212,14 +345,14 @@ export const RecentFilesTable: React.FC<RecentFilesTableProps> = ({
                   key={file.id}
                   className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group"
                 >
-                  {/* File Name & Icon */}
+                  {/* File Name & Icon / Row Thumbnail */}
                   <td className="py-2.5 pl-4 pr-3">
                     <div className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${style.iconBg} ${style.iconColor}`}
-                      >
-                        <Icon className="w-4 h-4 stroke-[1.8]" />
-                      </div>
+                      <RowThumbnail
+                        file={file}
+                        fallbackStyle={style}
+                        Icon={Icon}
+                      />
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <p
