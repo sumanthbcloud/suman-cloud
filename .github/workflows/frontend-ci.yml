@@ -1,0 +1,32 @@
+name: Frontend CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/reusable-docker-ci.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/reusable-docker-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  frontend:
+    uses: ./.github/workflows/reusable-docker-ci.yml
+    with:
+      component: frontend
+      working-directory: frontend
+      runtime: node
+      runtime-version: '20'
+      docker-context: ./frontend
+      dockerfile: ./frontend/Dockerfile
+      image-prefix: frontend
+    secrets:
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}

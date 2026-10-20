@@ -1,0 +1,32 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+      - '.github/workflows/reusable-docker-ci.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+      - '.github/workflows/reusable-docker-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  backend:
+    uses: ./.github/workflows/reusable-docker-ci.yml
+    with:
+      component: backend
+      working-directory: backend
+      runtime: java
+      runtime-version: '21'
+      docker-context: ./backend
+      dockerfile: ./backend/Dockerfile
+      image-prefix: backend
+    secrets:
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
